@@ -9,38 +9,284 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProfileSetupRouteImport } from './routes/profile/setup'
+import { Route as AppTripsIndexRouteImport } from './routes/app/trips/index'
+import { Route as ApiTripsIndexRouteImport } from './routes/api/trips/index'
+import { Route as AppTripsCreateRouteImport } from './routes/app/trips/create'
+import { Route as AppTripsTripIdRouteImport } from './routes/app/trips/$tripId'
+import { Route as ApiTripsJoinRouteImport } from './routes/api/trips/join'
+import { Route as ApiTripsCreateRouteImport } from './routes/api/trips/create'
+import { Route as ApiProfileSaveRouteImport } from './routes/api/profile/save'
+import { Route as ApiProfileCheckOnboardingRouteImport } from './routes/api/profile/check-onboarding'
+import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
+import { Route as ApiAuthCheckRouteImport } from './routes/api/auth/check'
+import { Route as ApiTripsTripIdIndexRouteImport } from './routes/api/trips/$tripId/index'
+import { Route as ApiTripsTripIdSubgroupsRouteImport } from './routes/api/trips/$tripId/subgroups'
+import { Route as ApiTripsTripIdPaymentsRouteImport } from './routes/api/trips/$tripId/payments'
+import { Route as ApiTripsTripIdExpensesRouteImport } from './routes/api/trips/$tripId/expenses'
+import { Route as ApiTripsTripIdBalancesRouteImport } from './routes/api/trips/$tripId/balances'
+import { Route as ApiTripsTripIdSubgroupsJoinRouteImport } from './routes/api/trips/$tripId/subgroups/join'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileSetupRoute = ProfileSetupRouteImport.update({
+  id: '/profile/setup',
+  path: '/profile/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTripsIndexRoute = AppTripsIndexRouteImport.update({
+  id: '/app/trips/',
+  path: '/app/trips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsIndexRoute = ApiTripsIndexRouteImport.update({
+  id: '/api/trips/',
+  path: '/api/trips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTripsCreateRoute = AppTripsCreateRouteImport.update({
+  id: '/app/trips/create',
+  path: '/app/trips/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTripsTripIdRoute = AppTripsTripIdRouteImport.update({
+  id: '/app/trips/$tripId',
+  path: '/app/trips/$tripId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsJoinRoute = ApiTripsJoinRouteImport.update({
+  id: '/api/trips/join',
+  path: '/api/trips/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsCreateRoute = ApiTripsCreateRouteImport.update({
+  id: '/api/trips/create',
+  path: '/api/trips/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfileSaveRoute = ApiProfileSaveRouteImport.update({
+  id: '/api/profile/save',
+  path: '/api/profile/save',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfileCheckOnboardingRoute =
+  ApiProfileCheckOnboardingRouteImport.update({
+    id: '/api/profile/check-onboarding',
+    path: '/api/profile/check-onboarding',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
+  id: '/api/auth/login',
+  path: '/api/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthCheckRoute = ApiAuthCheckRouteImport.update({
+  id: '/api/auth/check',
+  path: '/api/auth/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdIndexRoute = ApiTripsTripIdIndexRouteImport.update({
+  id: '/api/trips/$tripId/',
+  path: '/api/trips/$tripId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdSubgroupsRoute = ApiTripsTripIdSubgroupsRouteImport.update({
+  id: '/api/trips/$tripId/subgroups',
+  path: '/api/trips/$tripId/subgroups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdPaymentsRoute = ApiTripsTripIdPaymentsRouteImport.update({
+  id: '/api/trips/$tripId/payments',
+  path: '/api/trips/$tripId/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdExpensesRoute = ApiTripsTripIdExpensesRouteImport.update({
+  id: '/api/trips/$tripId/expenses',
+  path: '/api/trips/$tripId/expenses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdBalancesRoute = ApiTripsTripIdBalancesRouteImport.update({
+  id: '/api/trips/$tripId/balances',
+  path: '/api/trips/$tripId/balances',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdSubgroupsJoinRoute =
+  ApiTripsTripIdSubgroupsJoinRouteImport.update({
+    id: '/join',
+    path: '/join',
+    getParentRoute: () => ApiTripsTripIdSubgroupsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile/setup': typeof ProfileSetupRoute
+  '/api/auth/check': typeof ApiAuthCheckRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
+  '/api/profile/save': typeof ApiProfileSaveRoute
+  '/api/trips/create': typeof ApiTripsCreateRoute
+  '/api/trips/join': typeof ApiTripsJoinRoute
+  '/app/trips/$tripId': typeof AppTripsTripIdRoute
+  '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/trips': typeof ApiTripsIndexRoute
+  '/app/trips': typeof AppTripsIndexRoute
+  '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
+  '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
+  '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
+  '/api/trips/$tripId': typeof ApiTripsTripIdIndexRoute
+  '/api/trips/$tripId/subgroups/join': typeof ApiTripsTripIdSubgroupsJoinRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile/setup': typeof ProfileSetupRoute
+  '/api/auth/check': typeof ApiAuthCheckRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
+  '/api/profile/save': typeof ApiProfileSaveRoute
+  '/api/trips/create': typeof ApiTripsCreateRoute
+  '/api/trips/join': typeof ApiTripsJoinRoute
+  '/app/trips/$tripId': typeof AppTripsTripIdRoute
+  '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/trips': typeof ApiTripsIndexRoute
+  '/app/trips': typeof AppTripsIndexRoute
+  '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
+  '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
+  '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
+  '/api/trips/$tripId': typeof ApiTripsTripIdIndexRoute
+  '/api/trips/$tripId/subgroups/join': typeof ApiTripsTripIdSubgroupsJoinRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/profile/setup': typeof ProfileSetupRoute
+  '/api/auth/check': typeof ApiAuthCheckRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
+  '/api/profile/save': typeof ApiProfileSaveRoute
+  '/api/trips/create': typeof ApiTripsCreateRoute
+  '/api/trips/join': typeof ApiTripsJoinRoute
+  '/app/trips/$tripId': typeof AppTripsTripIdRoute
+  '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/trips/': typeof ApiTripsIndexRoute
+  '/app/trips/': typeof AppTripsIndexRoute
+  '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
+  '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
+  '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
+  '/api/trips/$tripId/': typeof ApiTripsTripIdIndexRoute
+  '/api/trips/$tripId/subgroups/join': typeof ApiTripsTripIdSubgroupsJoinRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/profile/setup'
+    | '/api/auth/check'
+    | '/api/auth/login'
+    | '/api/profile/check-onboarding'
+    | '/api/profile/save'
+    | '/api/trips/create'
+    | '/api/trips/join'
+    | '/app/trips/$tripId'
+    | '/app/trips/create'
+    | '/api/trips'
+    | '/app/trips'
+    | '/api/trips/$tripId/balances'
+    | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/payments'
+    | '/api/trips/$tripId/subgroups'
+    | '/api/trips/$tripId'
+    | '/api/trips/$tripId/subgroups/join'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/profile/setup'
+    | '/api/auth/check'
+    | '/api/auth/login'
+    | '/api/profile/check-onboarding'
+    | '/api/profile/save'
+    | '/api/trips/create'
+    | '/api/trips/join'
+    | '/app/trips/$tripId'
+    | '/app/trips/create'
+    | '/api/trips'
+    | '/app/trips'
+    | '/api/trips/$tripId/balances'
+    | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/payments'
+    | '/api/trips/$tripId/subgroups'
+    | '/api/trips/$tripId'
+    | '/api/trips/$tripId/subgroups/join'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/profile/setup'
+    | '/api/auth/check'
+    | '/api/auth/login'
+    | '/api/profile/check-onboarding'
+    | '/api/profile/save'
+    | '/api/trips/create'
+    | '/api/trips/join'
+    | '/app/trips/$tripId'
+    | '/app/trips/create'
+    | '/api/trips/'
+    | '/app/trips/'
+    | '/api/trips/$tripId/balances'
+    | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/payments'
+    | '/api/trips/$tripId/subgroups'
+    | '/api/trips/$tripId/'
+    | '/api/trips/$tripId/subgroups/join'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
+  ProfileSetupRoute: typeof ProfileSetupRoute
+  ApiAuthCheckRoute: typeof ApiAuthCheckRoute
+  ApiAuthLoginRoute: typeof ApiAuthLoginRoute
+  ApiProfileCheckOnboardingRoute: typeof ApiProfileCheckOnboardingRoute
+  ApiProfileSaveRoute: typeof ApiProfileSaveRoute
+  ApiTripsCreateRoute: typeof ApiTripsCreateRoute
+  ApiTripsJoinRoute: typeof ApiTripsJoinRoute
+  AppTripsTripIdRoute: typeof AppTripsTripIdRoute
+  AppTripsCreateRoute: typeof AppTripsCreateRoute
+  ApiTripsIndexRoute: typeof ApiTripsIndexRoute
+  AppTripsIndexRoute: typeof AppTripsIndexRoute
+  ApiTripsTripIdBalancesRoute: typeof ApiTripsTripIdBalancesRoute
+  ApiTripsTripIdExpensesRoute: typeof ApiTripsTripIdExpensesRoute
+  ApiTripsTripIdPaymentsRoute: typeof ApiTripsTripIdPaymentsRoute
+  ApiTripsTripIdSubgroupsRoute: typeof ApiTripsTripIdSubgroupsRouteWithChildren
+  ApiTripsTripIdIndexRoute: typeof ApiTripsTripIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +294,161 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/setup': {
+      id: '/profile/setup'
+      path: '/profile/setup'
+      fullPath: '/profile/setup'
+      preLoaderRoute: typeof ProfileSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/trips/': {
+      id: '/app/trips/'
+      path: '/app/trips'
+      fullPath: '/app/trips'
+      preLoaderRoute: typeof AppTripsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/': {
+      id: '/api/trips/'
+      path: '/api/trips'
+      fullPath: '/api/trips'
+      preLoaderRoute: typeof ApiTripsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/trips/create': {
+      id: '/app/trips/create'
+      path: '/app/trips/create'
+      fullPath: '/app/trips/create'
+      preLoaderRoute: typeof AppTripsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/trips/$tripId': {
+      id: '/app/trips/$tripId'
+      path: '/app/trips/$tripId'
+      fullPath: '/app/trips/$tripId'
+      preLoaderRoute: typeof AppTripsTripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/join': {
+      id: '/api/trips/join'
+      path: '/api/trips/join'
+      fullPath: '/api/trips/join'
+      preLoaderRoute: typeof ApiTripsJoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/create': {
+      id: '/api/trips/create'
+      path: '/api/trips/create'
+      fullPath: '/api/trips/create'
+      preLoaderRoute: typeof ApiTripsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profile/save': {
+      id: '/api/profile/save'
+      path: '/api/profile/save'
+      fullPath: '/api/profile/save'
+      preLoaderRoute: typeof ApiProfileSaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profile/check-onboarding': {
+      id: '/api/profile/check-onboarding'
+      path: '/api/profile/check-onboarding'
+      fullPath: '/api/profile/check-onboarding'
+      preLoaderRoute: typeof ApiProfileCheckOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/login': {
+      id: '/api/auth/login'
+      path: '/api/auth/login'
+      fullPath: '/api/auth/login'
+      preLoaderRoute: typeof ApiAuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/check': {
+      id: '/api/auth/check'
+      path: '/api/auth/check'
+      fullPath: '/api/auth/check'
+      preLoaderRoute: typeof ApiAuthCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/': {
+      id: '/api/trips/$tripId/'
+      path: '/api/trips/$tripId'
+      fullPath: '/api/trips/$tripId'
+      preLoaderRoute: typeof ApiTripsTripIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/subgroups': {
+      id: '/api/trips/$tripId/subgroups'
+      path: '/api/trips/$tripId/subgroups'
+      fullPath: '/api/trips/$tripId/subgroups'
+      preLoaderRoute: typeof ApiTripsTripIdSubgroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/payments': {
+      id: '/api/trips/$tripId/payments'
+      path: '/api/trips/$tripId/payments'
+      fullPath: '/api/trips/$tripId/payments'
+      preLoaderRoute: typeof ApiTripsTripIdPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/expenses': {
+      id: '/api/trips/$tripId/expenses'
+      path: '/api/trips/$tripId/expenses'
+      fullPath: '/api/trips/$tripId/expenses'
+      preLoaderRoute: typeof ApiTripsTripIdExpensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/balances': {
+      id: '/api/trips/$tripId/balances'
+      path: '/api/trips/$tripId/balances'
+      fullPath: '/api/trips/$tripId/balances'
+      preLoaderRoute: typeof ApiTripsTripIdBalancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/subgroups/join': {
+      id: '/api/trips/$tripId/subgroups/join'
+      path: '/join'
+      fullPath: '/api/trips/$tripId/subgroups/join'
+      preLoaderRoute: typeof ApiTripsTripIdSubgroupsJoinRouteImport
+      parentRoute: typeof ApiTripsTripIdSubgroupsRoute
+    }
   }
 }
 
+interface ApiTripsTripIdSubgroupsRouteChildren {
+  ApiTripsTripIdSubgroupsJoinRoute: typeof ApiTripsTripIdSubgroupsJoinRoute
+}
+
+const ApiTripsTripIdSubgroupsRouteChildren: ApiTripsTripIdSubgroupsRouteChildren =
+  {
+    ApiTripsTripIdSubgroupsJoinRoute: ApiTripsTripIdSubgroupsJoinRoute,
+  }
+
+const ApiTripsTripIdSubgroupsRouteWithChildren =
+  ApiTripsTripIdSubgroupsRoute._addFileChildren(
+    ApiTripsTripIdSubgroupsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  ProfileSetupRoute: ProfileSetupRoute,
+  ApiAuthCheckRoute: ApiAuthCheckRoute,
+  ApiAuthLoginRoute: ApiAuthLoginRoute,
+  ApiProfileCheckOnboardingRoute: ApiProfileCheckOnboardingRoute,
+  ApiProfileSaveRoute: ApiProfileSaveRoute,
+  ApiTripsCreateRoute: ApiTripsCreateRoute,
+  ApiTripsJoinRoute: ApiTripsJoinRoute,
+  AppTripsTripIdRoute: AppTripsTripIdRoute,
+  AppTripsCreateRoute: AppTripsCreateRoute,
+  ApiTripsIndexRoute: ApiTripsIndexRoute,
+  AppTripsIndexRoute: AppTripsIndexRoute,
+  ApiTripsTripIdBalancesRoute: ApiTripsTripIdBalancesRoute,
+  ApiTripsTripIdExpensesRoute: ApiTripsTripIdExpensesRoute,
+  ApiTripsTripIdPaymentsRoute: ApiTripsTripIdPaymentsRoute,
+  ApiTripsTripIdSubgroupsRoute: ApiTripsTripIdSubgroupsRouteWithChildren,
+  ApiTripsTripIdIndexRoute: ApiTripsTripIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
