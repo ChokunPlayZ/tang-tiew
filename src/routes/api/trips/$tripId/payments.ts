@@ -49,7 +49,7 @@ async function getCurrentUserFromRequest(request: Request) {
 export const Route = createFileRoute('/api/trips/$tripId/payments')({
     server: {
         handlers: {
-            // GET - List all payments
+            // GET - List all payments with user names
             GET: async ({ request, params }) => {
                 const currentUser = await getCurrentUserFromRequest(request)
                 if (!currentUser) {
@@ -61,6 +61,7 @@ export const Route = createFileRoute('/api/trips/$tripId/payments')({
                     return Response.json({ error: 'Invalid trip ID' }, { status: 400 })
                 }
 
+                // Get payments
                 const tripPayments = await db.select({
                     id: payments.id,
                     fromUserId: payments.fromUserId,
@@ -74,7 +75,22 @@ export const Route = createFileRoute('/api/trips/$tripId/payments')({
                     .where(eq(payments.tripId, tripId))
                     .orderBy(desc(payments.createdAt))
 
-                return Response.json(tripPayments)
+                // Get user names for each payment
+                const paymentsWithNames = await Promise.all(
+                    tripPayments.map(async (p) => {
+                        const fromUser = await db.select({ displayName: users.displayName })
+                            .from(users).where(eq(users.id, p.fromUserId)).limit(1)
+                        const toUser = await db.select({ displayName: users.displayName })
+                            .from(users).where(eq(users.id, p.toUserId)).limit(1)
+                        return {
+                            ...p,
+                            fromUserName: fromUser[0]?.displayName || 'Unknown',
+                            toUserName: toUser[0]?.displayName || 'Unknown',
+                        }
+                    })
+                )
+
+                return Response.json(paymentsWithNames)
             },
 
             // POST - Record a payment

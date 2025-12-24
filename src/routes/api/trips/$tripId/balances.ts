@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from '../../../../db'
-import { expenses, expenseShares, tripMembers, payments, sessions, users } from '../../../../db/schema'
+import { expenses, expenseShares, tripMembers, subGroupMembers, payments, sessions, users } from '../../../../db/schema'
 import { eq, and } from 'drizzle-orm'
 
 const SESSION_COOKIE = 'auth_session'
@@ -45,6 +45,22 @@ async function getCurrentUserFromRequest(request: Request) {
     return user
 }
 
+// Helper: Get members who should split an expense based on its target
+async function getSplitMemberIds(tripId: number, splitTarget: string, splitGroupId: number | null): Promise<number[]> {
+    if (splitTarget === 'ALL') {
+        const members = await db.select({ userId: tripMembers.userId })
+            .from(tripMembers)
+            .where(eq(tripMembers.tripId, tripId))
+        return members.map(m => m.userId)
+    } else if (splitTarget === 'GROUP' && splitGroupId) {
+        const members = await db.select({ userId: subGroupMembers.userId })
+            .from(subGroupMembers)
+            .where(eq(subGroupMembers.subGroupId, splitGroupId))
+        return members.map(m => m.userId)
+    }
+    return []
+}
+
 type BalanceMap = Record<number, Record<number, number>>
 
 export const Route = createFileRoute('/api/trips/$tripId/balances')({
@@ -84,11 +100,13 @@ export const Route = createFileRoute('/api/trips/$tripId/balances')({
                     .innerJoin(users, eq(tripMembers.userId, users.id))
                     .where(eq(tripMembers.tripId, tripId))
 
-                // Get all expenses for this trip with shares
+                // Get all expenses for this trip
                 const tripExpenses = await db.select({
                     id: expenses.id,
                     paidByUserId: expenses.paidByUserId,
                     amount: expenses.amount,
+                    splitTarget: expenses.splitTarget,
+                    splitGroupId: expenses.splitGroupId,
                 })
                     .from(expenses)
                     .where(eq(expenses.tripId, tripId))
@@ -97,21 +115,45 @@ export const Route = createFileRoute('/api/trips/$tripId/balances')({
                 const balances: BalanceMap = {}
 
                 for (const exp of tripExpenses) {
-                    const shares = await db.select({
-                        userId: expenseShares.userId,
-                        owesAmount: expenseShares.owesAmount,
-                    })
-                        .from(expenseShares)
-                        .where(eq(expenseShares.expenseId, exp.id))
+                    const target = exp.splitTarget || 'ALL'
+                    let splitMemberIds: number[]
 
-                    for (const share of shares) {
-                        if (share.userId === exp.paidByUserId) continue // Don't owe yourself
+                    if (target === 'CUSTOM') {
+                        // Get from stored shares
+                        const shares = await db.select({
+                            userId: expenseShares.userId,
+                            owesAmount: expenseShares.owesAmount,
+                        })
+                            .from(expenseShares)
+                            .where(eq(expenseShares.expenseId, exp.id))
 
-                        if (!balances[share.userId]) balances[share.userId] = {}
-                        if (!balances[share.userId][exp.paidByUserId]) {
-                            balances[share.userId][exp.paidByUserId] = 0
+                        for (const share of shares) {
+                            if (share.userId === exp.paidByUserId) continue
+
+                            if (!balances[share.userId]) balances[share.userId] = {}
+                            if (!balances[share.userId][exp.paidByUserId]) {
+                                balances[share.userId][exp.paidByUserId] = 0
+                            }
+                            balances[share.userId][exp.paidByUserId] += parseFloat(share.owesAmount)
                         }
-                        balances[share.userId][exp.paidByUserId] += parseFloat(share.owesAmount)
+                        continue
+                    }
+
+                    // Dynamic calculation for ALL or GROUP
+                    splitMemberIds = await getSplitMemberIds(tripId, target, exp.splitGroupId)
+
+                    if (splitMemberIds.length === 0) continue
+
+                    const shareAmount = parseFloat(exp.amount) / splitMemberIds.length
+
+                    for (const memberId of splitMemberIds) {
+                        if (memberId === exp.paidByUserId) continue // Don't owe yourself
+
+                        if (!balances[memberId]) balances[memberId] = {}
+                        if (!balances[memberId][exp.paidByUserId]) {
+                            balances[memberId][exp.paidByUserId] = 0
+                        }
+                        balances[memberId][exp.paidByUserId] += shareAmount
                     }
                 }
 

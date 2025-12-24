@@ -6,7 +6,7 @@ import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog'
-import { ArrowLeft, Plus, Users, Receipt, Wallet, ChevronRight, Check } from 'lucide-react'
+import { ArrowLeft, Plus, Users, Receipt, Wallet, ChevronRight, Check, Upload, X, History, ImageIcon } from 'lucide-react'
 import generatePayload from 'promptpay-qr'
 import QRCode from 'qrcode'
 
@@ -51,6 +51,18 @@ type Balance = {
     amount: number
 }
 
+type Payment = {
+    id: number
+    fromUserId: number
+    fromUserName: string
+    toUserId: number
+    toUserName: string
+    amount: string
+    slipUrl: string | null
+    status: string
+    createdAt: string
+}
+
 export const Route = createFileRoute('/app/trips/$tripId')({
     component: TripDetailPage,
 })
@@ -65,6 +77,7 @@ function TripDetailPage() {
     const [currentUserId, setCurrentUserId] = useState<number | null>(null)
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [balances, setBalances] = useState<Balance[]>([])
+    const [payments, setPayments] = useState<Payment[]>([])
     const [activeTab, setActiveTab] = useState('members')
 
     const loadTripData = async () => {
@@ -109,6 +122,15 @@ function TripDetailPage() {
         }
     }
 
+    const loadPayments = async () => {
+        const response = await fetch(`/api/trips/${tripId}/payments`, {
+            credentials: 'include',
+        })
+        if (response.ok) {
+            setPayments(await response.json())
+        }
+    }
+
     useEffect(() => {
         loadTripData()
     }, [tripId])
@@ -116,6 +138,7 @@ function TripDetailPage() {
     useEffect(() => {
         if (activeTab === 'expenses') loadExpenses()
         if (activeTab === 'balances') loadBalances()
+        if (activeTab === 'payments') loadPayments()
     }, [activeTab])
 
     if (loading) {
@@ -147,15 +170,18 @@ function TripDetailPage() {
 
             <div className="max-w-2xl mx-auto p-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="w-full grid grid-cols-3">
-                        <TabsTrigger value="members" className="gap-2">
-                            <Users size={16} /> สมาชิก
+                    <TabsList className="w-full grid grid-cols-4">
+                        <TabsTrigger value="members" className="gap-1 text-xs">
+                            <Users size={14} /> สมาชิก
                         </TabsTrigger>
-                        <TabsTrigger value="expenses" className="gap-2">
-                            <Receipt size={16} /> รายจ่าย
+                        <TabsTrigger value="expenses" className="gap-1 text-xs">
+                            <Receipt size={14} /> รายจ่าย
                         </TabsTrigger>
-                        <TabsTrigger value="balances" className="gap-2">
-                            <Wallet size={16} /> สรุป
+                        <TabsTrigger value="balances" className="gap-1 text-xs">
+                            <Wallet size={14} /> สรุป
+                        </TabsTrigger>
+                        <TabsTrigger value="payments" className="gap-1 text-xs">
+                            <History size={14} /> ประวัติ
                         </TabsTrigger>
                     </TabsList>
 
@@ -175,6 +201,7 @@ function TripDetailPage() {
                         <ExpensesTab
                             expenses={expenses}
                             members={members}
+                            subGroups={subGroups}
                             tripId={tripId}
                             currentUserId={currentUserId}
                             onUpdate={loadExpenses}
@@ -189,6 +216,11 @@ function TripDetailPage() {
                             tripId={tripId}
                             onUpdate={loadBalances}
                         />
+                    </TabsContent>
+
+                    {/* Payments History Tab */}
+                    <TabsContent value="payments" className="space-y-4 mt-4">
+                        <PaymentsTab payments={payments} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -361,12 +393,14 @@ function MembersTab({
 function ExpensesTab({
     expenses,
     members,
+    subGroups,
     tripId,
     currentUserId,
     onUpdate
 }: {
     expenses: Expense[]
     members: Member[]
+    subGroups: SubGroup[]
     tripId: string
     currentUserId: number | null
     onUpdate: () => void
@@ -375,8 +409,22 @@ function ExpensesTab({
     const [title, setTitle] = useState('')
     const [amount, setAmount] = useState('')
     const [paidBy, setPaidBy] = useState<number | null>(currentUserId)
-    const [splitWith, setSplitWith] = useState<number[]>(members.map(m => m.userId))
+    const [splitTarget, setSplitTarget] = useState<'ALL' | 'GROUP'>('ALL')
+    const [splitGroupId, setSplitGroupId] = useState<number | null>(null)
+    const [slipFile, setSlipFile] = useState<File | null>(null)
+    const [slipPreview, setSlipPreview] = useState<string | null>(null)
+    const [isUploading, setIsUploading] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
+
+    // Calculate how many people will share based on current selection
+    const getShareCount = () => {
+        if (splitTarget === 'ALL') return members.length
+        if (splitTarget === 'GROUP' && splitGroupId) {
+            const group = subGroups.find(g => g.id === splitGroupId)
+            return group?.members.length || 0
+        }
+        return 0
+    }
 
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {}
@@ -384,7 +432,8 @@ function ExpensesTab({
         if (!title.trim()) newErrors.title = 'กรุณาใส่รายการ'
         if (!amount || parseFloat(amount) <= 0) newErrors.amount = 'กรุณาใส่จำนวนเงินที่ถูกต้อง'
         if (!paidBy) newErrors.paidBy = 'กรุณาเลือกคนจ่าย'
-        if (splitWith.length === 0) newErrors.splitWith = 'กรุณาเลือกคนที่จะหาร'
+        if (splitTarget === 'GROUP' && !splitGroupId) newErrors.splitTarget = 'กรุณาเลือกกลุ่ม'
+        if (getShareCount() === 0) newErrors.splitTarget = 'กลุ่มที่เลือกยังไม่มีสมาชิก'
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -393,7 +442,23 @@ function ExpensesTab({
     const handleAddExpense = async () => {
         if (!validate()) return
 
+        setIsUploading(true)
         try {
+            // Upload slip if provided
+            let slipUrl: string | undefined
+            if (slipFile) {
+                const formData = new FormData()
+                formData.append('file', slipFile)
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                if (uploadRes.ok) {
+                    const { url } = await uploadRes.json()
+                    slipUrl = url
+                }
+            }
+
             const response = await fetch(`/api/trips/${tripId}/expenses`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -402,7 +467,9 @@ function ExpensesTab({
                     amount: parseFloat(amount),
                     paidByUserId: paidBy,
                     splitType: 'EQUAL',
-                    splitWith: splitWith.map(userId => ({ userId }))
+                    splitTarget,
+                    splitGroupId: splitTarget === 'GROUP' ? splitGroupId : null,
+                    slipUrl,
                 }),
             })
 
@@ -416,22 +483,18 @@ function ExpensesTab({
             setTitle('')
             setAmount('')
             setPaidBy(currentUserId)
-            setSplitWith(members.map(m => m.userId))
+            setSplitTarget('ALL')
+            setSplitGroupId(null)
+            setSlipFile(null)
+            setSlipPreview(null)
             setIsAdding(false)
             setErrors({})
             onUpdate()
         } catch (error) {
             setErrors({ submit: 'เกิดข้อผิดพลาด' })
+        } finally {
+            setIsUploading(false)
         }
-    }
-
-    const toggleSplitWith = (userId: number) => {
-        if (splitWith.includes(userId)) {
-            setSplitWith(splitWith.filter(id => id !== userId))
-        } else {
-            setSplitWith([...splitWith, userId])
-        }
-        setErrors({ ...errors, splitWith: '' })
     }
 
     const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
@@ -505,32 +568,90 @@ function ExpensesTab({
 
                         <div className="space-y-2">
                             <Label>หารกับใคร? *</Label>
+                            <p className="text-xs text-gray-500">เลือก "ทุกคน" หรือกลุ่มใดกลุ่มหนึ่ง - ถ้ามีคนเข้าร่วมทีหลังจะถูกคำนวณอัตโนมัติ</p>
                             <div className="flex flex-wrap gap-2">
-                                {members.map(m => (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={splitTarget === 'ALL' ? 'default' : 'outline'}
+                                    onClick={() => {
+                                        setSplitTarget('ALL')
+                                        setSplitGroupId(null)
+                                        setErrors({ ...errors, splitTarget: '' })
+                                    }}
+                                >
+                                    <Users size={14} className="mr-1" />
+                                    ทุกคน ({members.length})
+                                </Button>
+                                {subGroups.map(sg => (
                                     <Button
-                                        key={m.userId}
+                                        key={sg.id}
+                                        type="button"
                                         size="sm"
-                                        variant={splitWith.includes(m.userId) ? 'default' : 'outline'}
-                                        onClick={() => toggleSplitWith(m.userId)}
+                                        variant={splitTarget === 'GROUP' && splitGroupId === sg.id ? 'default' : 'outline'}
+                                        onClick={() => {
+                                            setSplitTarget('GROUP')
+                                            setSplitGroupId(sg.id)
+                                            setErrors({ ...errors, splitTarget: '' })
+                                        }}
+                                        disabled={sg.members.length === 0}
                                     >
-                                        {splitWith.includes(m.userId) && <Check size={14} className="mr-1" />}
-                                        {m.displayName || 'สมาชิก'}
+                                        {sg.name} ({sg.members.length})
                                     </Button>
                                 ))}
                             </div>
-                            {errors.splitWith && <p className="text-sm text-red-500">{errors.splitWith}</p>}
-                            {splitWith.length > 0 && amount && (
+                            {errors.splitTarget && <p className="text-sm text-red-500">{errors.splitTarget}</p>}
+                            {amount && getShareCount() > 0 && (
                                 <p className="text-sm text-gray-500">
-                                    หารคนละ ฿{(parseFloat(amount) / splitWith.length).toFixed(2)}
+                                    หารคนละ ฿{(parseFloat(amount) / getShareCount()).toFixed(2)}
                                 </p>
                             )}
                         </div>
 
                         {errors.submit && <p className="text-sm text-red-500">{errors.submit}</p>}
 
+                        {/* Slip Upload */}
+                        <div className="space-y-2">
+                            <Label>แนบสลิป/ใบเสร็จ (ไม่บังคับ)</Label>
+                            {slipPreview ? (
+                                <div className="relative inline-block">
+                                    <img src={slipPreview} alt="Slip preview" className="max-h-32 rounded border" />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSlipFile(null)
+                                            setSlipPreview(null)
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-cyan-500 transition-colors">
+                                    <Upload size={20} className="text-gray-400" />
+                                    <span className="text-sm text-gray-500">เลือกรูปสลิป</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) {
+                                                setSlipFile(file)
+                                                setSlipPreview(URL.createObjectURL(file))
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            )}
+                        </div>
+
                         <div className="flex gap-2 justify-end">
                             <Button variant="ghost" onClick={() => setIsAdding(false)}>ยกเลิก</Button>
-                            <Button onClick={handleAddExpense} className="bg-cyan-600">บันทึก</Button>
+                            <Button onClick={handleAddExpense} className="bg-cyan-600" disabled={isUploading}>
+                                {isUploading ? 'กำลังบันทึก...' : 'บันทึก'}
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -650,9 +771,14 @@ function PaymentCard({
     const [showQR, setShowQR] = useState(false)
     const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
     const [isPaying, setIsPaying] = useState(false)
+    const [slipFile, setSlipFile] = useState<File | null>(null)
+    const [slipPreview, setSlipPreview] = useState<string | null>(null)
 
     const generateQR = async () => {
-        if (!debt.toPromptPayId) return
+        if (!debt.toPromptPayId) {
+            alert('ผู้รับยังไม่ได้ตั้งค่า PromptPay')
+            return
+        }
 
         try {
             // Generate PromptPay payload with amount
@@ -669,17 +795,35 @@ function PaymentCard({
     const handleMarkPaid = async () => {
         setIsPaying(true)
         try {
+            // Upload slip if provided
+            let slipUrl: string | undefined
+            if (slipFile) {
+                const formData = new FormData()
+                formData.append('file', slipFile)
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                if (uploadRes.ok) {
+                    const { url } = await uploadRes.json()
+                    slipUrl = url
+                }
+            }
+
             const response = await fetch(`/api/trips/${tripId}/payments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     toUserId: debt.toUserId,
-                    amount: debt.amount
+                    amount: debt.amount,
+                    slipUrl
                 }),
             })
 
             if (response.ok) {
                 setShowQR(false)
+                setSlipFile(null)
+                setSlipPreview(null)
                 onPaid()
             }
         } catch (error) {
@@ -715,10 +859,126 @@ function PaymentCard({
                         <p className="text-sm text-gray-500">
                             สแกน QR เพื่อจ่ายเงิน จำนวนเงินจะถูกกรอกให้อัตโนมัติ
                         </p>
+
+                        {/* Slip Upload */}
+                        <div className="space-y-2 text-left">
+                            <Label className="text-sm">แนบสลิปการโอน (ไม่บังคับ)</Label>
+                            {slipPreview ? (
+                                <div className="relative inline-block">
+                                    <img src={slipPreview} alt="Slip" className="max-h-24 rounded border" />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSlipFile(null)
+                                            setSlipPreview(null)
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-cyan-500 transition-colors">
+                                    <Upload size={16} className="text-gray-400" />
+                                    <span className="text-sm text-gray-500">เลือกรูปสลิป</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) {
+                                                setSlipFile(file)
+                                                setSlipPreview(URL.createObjectURL(file))
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            )}
+                        </div>
+
                         <Button onClick={handleMarkPaid} className="w-full" disabled={isPaying}>
                             {isPaying ? 'กำลังบันทึก...' : 'จ่ายแล้ว ✓'}
                         </Button>
                     </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payments History Tab Component
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PaymentsTab({ payments }: { payments: Payment[] }) {
+    const [selectedSlip, setSelectedSlip] = useState<string | null>(null)
+
+    if (payments.length === 0) {
+        return (
+            <Card>
+                <CardContent className="py-10 text-center text-gray-500">
+                    ยังไม่มีประวัติการชำระเงิน
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">ประวัติการชำระเงิน</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {payments.map(payment => (
+                        <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div className="flex-1">
+                                <div className="font-medium">
+                                    {payment.fromUserName} → {payment.toUserName}
+                                </div>
+                                <div className="text-lg font-bold text-green-600">
+                                    ฿{parseFloat(payment.amount).toLocaleString()}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    {new Date(payment.createdAt).toLocaleDateString('th-TH', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </div>
+                            </div>
+                            {payment.slipUrl && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedSlip(payment.slipUrl)}
+                                    className="gap-1"
+                                >
+                                    <ImageIcon size={14} />
+                                    ดูสลิป
+                                </Button>
+                            )}
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+
+            {/* Slip Viewer Dialog */}
+            <Dialog open={!!selectedSlip} onOpenChange={() => setSelectedSlip(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>สลิปการโอนเงิน</DialogTitle>
+                    </DialogHeader>
+                    {selectedSlip && (
+                        <img
+                            src={selectedSlip}
+                            alt="Payment slip"
+                            className="w-full rounded-lg"
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
         </>

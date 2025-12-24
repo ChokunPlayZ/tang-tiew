@@ -87,7 +87,10 @@ export const expenses = pgTable('expenses', {
     paidByUserId: integer('paid_by_user_id').references(() => users.id).notNull(),
     title: text('title').notNull(),
     amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
-    splitType: text('split_type').default('EQUAL'), // EQUAL, EXACT, SHARES
+    splitType: text('split_type').default('EQUAL'), // EQUAL, EXACT
+    splitTarget: text('split_target').default('ALL'), // ALL, GROUP, CUSTOM
+    splitGroupId: integer('split_group_id').references(() => subGroups.id), // Only when splitTarget is GROUP
+    slipUrl: text('slip_url'), // Receipt/slip image
     createdAt: timestamp('created_at').defaultNow(),
 })
 

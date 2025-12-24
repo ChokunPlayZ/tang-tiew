@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { db } from '../../../../db'
-import { expenses, expenseShares, tripMembers, sessions, users } from '../../../../db/schema'
+import { expenses, expenseShares, tripMembers, subGroupMembers, sessions, users } from '../../../../db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 
 const SESSION_COOKIE = 'auth_session'
@@ -46,10 +46,38 @@ async function getCurrentUserFromRequest(request: Request) {
     return user
 }
 
+// Helper: Get members who should split an expense based on its target
+async function getSplitMembers(tripId: number, splitTarget: string, splitGroupId: number | null) {
+    if (splitTarget === 'ALL') {
+        // All current trip members
+        const members = await db.select({
+            userId: tripMembers.userId,
+            displayName: users.displayName,
+        })
+            .from(tripMembers)
+            .innerJoin(users, eq(tripMembers.userId, users.id))
+            .where(eq(tripMembers.tripId, tripId))
+        return members
+    } else if (splitTarget === 'GROUP' && splitGroupId) {
+        // All current members of the subgroup
+        const members = await db.select({
+            userId: subGroupMembers.userId,
+            displayName: users.displayName,
+        })
+            .from(subGroupMembers)
+            .innerJoin(users, eq(subGroupMembers.userId, users.id))
+            .where(eq(subGroupMembers.subGroupId, splitGroupId))
+        return members
+    } else {
+        // CUSTOM - use stored expenseShares
+        return null
+    }
+}
+
 export const Route = createFileRoute('/api/trips/$tripId/expenses')({
     server: {
         handlers: {
-            // GET - List all expenses for the trip
+            // GET - List all expenses for the trip with dynamically calculated shares
             GET: async ({ request, params }) => {
                 const currentUser = await getCurrentUserFromRequest(request)
                 if (!currentUser) {
@@ -79,6 +107,9 @@ export const Route = createFileRoute('/api/trips/$tripId/expenses')({
                     title: expenses.title,
                     amount: expenses.amount,
                     splitType: expenses.splitType,
+                    splitTarget: expenses.splitTarget,
+                    splitGroupId: expenses.splitGroupId,
+                    slipUrl: expenses.slipUrl,
                     createdAt: expenses.createdAt,
                     paidByUserId: expenses.paidByUserId,
                     paidByName: users.displayName,
@@ -88,19 +119,37 @@ export const Route = createFileRoute('/api/trips/$tripId/expenses')({
                     .where(eq(expenses.tripId, tripId))
                     .orderBy(desc(expenses.createdAt))
 
-                // Get shares for each expense
+                // Calculate shares dynamically for each expense
                 const expensesWithShares = await Promise.all(
                     tripExpenses.map(async (exp) => {
-                        const shares = await db.select({
-                            userId: expenseShares.userId,
-                            owesAmount: expenseShares.owesAmount,
-                            userName: users.displayName,
-                        })
-                            .from(expenseShares)
-                            .innerJoin(users, eq(expenseShares.userId, users.id))
-                            .where(eq(expenseShares.expenseId, exp.id))
+                        const target = exp.splitTarget || 'ALL'
 
-                        return { ...exp, shares }
+                        if (target === 'CUSTOM') {
+                            // Use stored shares
+                            const shares = await db.select({
+                                userId: expenseShares.userId,
+                                owesAmount: expenseShares.owesAmount,
+                                userName: users.displayName,
+                            })
+                                .from(expenseShares)
+                                .innerJoin(users, eq(expenseShares.userId, users.id))
+                                .where(eq(expenseShares.expenseId, exp.id))
+                            return { ...exp, shares }
+                        } else {
+                            // Calculate dynamically
+                            const members = await getSplitMembers(tripId, target, exp.splitGroupId)
+                            if (!members || members.length === 0) {
+                                return { ...exp, shares: [] }
+                            }
+
+                            const shareAmount = parseFloat(exp.amount) / members.length
+                            const shares = members.map(m => ({
+                                userId: m.userId,
+                                userName: m.displayName,
+                                owesAmount: shareAmount.toFixed(2)
+                            }))
+                            return { ...exp, shares }
+                        }
                     })
                 )
 
@@ -138,10 +187,14 @@ export const Route = createFileRoute('/api/trips/$tripId/expenses')({
                         amount: z.number().positive('Amount must be positive'),
                         paidByUserId: z.number(),
                         splitType: z.enum(['EQUAL', 'EXACT']).default('EQUAL'),
+                        splitTarget: z.enum(['ALL', 'GROUP', 'CUSTOM']).default('ALL'),
+                        splitGroupId: z.number().nullable().optional(),
+                        slipUrl: z.string().optional(),
+                        // Only used for CUSTOM splits
                         splitWith: z.array(z.object({
                             userId: z.number(),
-                            amount: z.number().optional() // Only used for EXACT split
-                        })).min(1, 'Must split with at least one person')
+                            amount: z.number().optional()
+                        })).optional()
                     }).parse(body)
 
                     // Create expense
@@ -150,28 +203,33 @@ export const Route = createFileRoute('/api/trips/$tripId/expenses')({
                         paidByUserId: parsed.paidByUserId,
                         title: parsed.title,
                         amount: parsed.amount.toString(),
-                        splitType: parsed.splitType
+                        splitType: parsed.splitType,
+                        splitTarget: parsed.splitTarget,
+                        splitGroupId: parsed.splitGroupId || null,
+                        slipUrl: parsed.slipUrl || null
                     }).returning()
 
-                    // Create shares
-                    if (parsed.splitType === 'EQUAL') {
-                        const shareAmount = parsed.amount / parsed.splitWith.length
-                        await db.insert(expenseShares).values(
-                            parsed.splitWith.map(s => ({
-                                expenseId: expense.id,
-                                userId: s.userId,
-                                owesAmount: shareAmount.toFixed(2)
-                            }))
-                        )
-                    } else {
-                        // EXACT split
-                        await db.insert(expenseShares).values(
-                            parsed.splitWith.map(s => ({
-                                expenseId: expense.id,
-                                userId: s.userId,
-                                owesAmount: (s.amount || 0).toFixed(2)
-                            }))
-                        )
+                    // Only create expenseShares for CUSTOM splits
+                    if (parsed.splitTarget === 'CUSTOM' && parsed.splitWith && parsed.splitWith.length > 0) {
+                        if (parsed.splitType === 'EQUAL') {
+                            const shareAmount = parsed.amount / parsed.splitWith.length
+                            await db.insert(expenseShares).values(
+                                parsed.splitWith.map(s => ({
+                                    expenseId: expense.id,
+                                    userId: s.userId,
+                                    owesAmount: shareAmount.toFixed(2)
+                                }))
+                            )
+                        } else {
+                            // EXACT split
+                            await db.insert(expenseShares).values(
+                                parsed.splitWith.map(s => ({
+                                    expenseId: expense.id,
+                                    userId: s.userId,
+                                    owesAmount: (s.amount || 0).toFixed(2)
+                                }))
+                            )
+                        }
                     }
 
                     return Response.json(expense)
@@ -179,7 +237,7 @@ export const Route = createFileRoute('/api/trips/$tripId/expenses')({
                     if (error instanceof z.ZodError) {
                         return Response.json({
                             error: 'Validation failed',
-                            details: error
+                            details: error.issues
                         }, { status: 400 })
                     }
                     console.error('Create expense error:', error)

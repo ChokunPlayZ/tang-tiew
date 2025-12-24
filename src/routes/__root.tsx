@@ -1,8 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-
-import Header from '../components/Header'
+import { ThemeProvider } from '../components/ThemeProvider'
 
 import appCss from '../styles.css?url'
 
@@ -17,7 +16,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'TangTiew - Trip Expense Splitter',
       },
     ],
     links: [
@@ -33,13 +32,14 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="th">
       <head>
         <HeadContent />
       </head>
       <body>
-        <Header />
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

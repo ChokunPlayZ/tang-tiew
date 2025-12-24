@@ -12,14 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileSetupRouteImport } from './routes/profile/setup'
+import { Route as AppSettingsRouteImport } from './routes/app/settings'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppTripsIndexRouteImport } from './routes/app/trips/index'
 import { Route as ApiTripsIndexRouteImport } from './routes/api/trips/index'
+import { Route as ApiProfileIndexRouteImport } from './routes/api/profile/index'
 import { Route as AppTripsCreateRouteImport } from './routes/app/trips/create'
 import { Route as AppTripsTripIdRouteImport } from './routes/app/trips/$tripId'
 import { Route as ApiTripsJoinRouteImport } from './routes/api/trips/join'
 import { Route as ApiTripsCreateRouteImport } from './routes/api/trips/create'
 import { Route as ApiProfileSaveRouteImport } from './routes/api/profile/save'
 import { Route as ApiProfileCheckOnboardingRouteImport } from './routes/api/profile/check-onboarding'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthCheckRouteImport } from './routes/api/auth/check'
 import { Route as ApiTripsTripIdIndexRouteImport } from './routes/api/trips/$tripId/index'
@@ -44,6 +48,16 @@ const ProfileSetupRoute = ProfileSetupRouteImport.update({
   path: '/profile/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/app/settings',
+  path: '/app/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppTripsIndexRoute = AppTripsIndexRouteImport.update({
   id: '/app/trips/',
   path: '/app/trips/',
@@ -52,6 +66,11 @@ const AppTripsIndexRoute = AppTripsIndexRouteImport.update({
 const ApiTripsIndexRoute = ApiTripsIndexRouteImport.update({
   id: '/api/trips/',
   path: '/api/trips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfileIndexRoute = ApiProfileIndexRouteImport.update({
+  id: '/api/profile/',
+  path: '/api/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTripsCreateRoute = AppTripsCreateRouteImport.update({
@@ -85,6 +104,11 @@ const ApiProfileCheckOnboardingRoute =
     path: '/api/profile/check-onboarding',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
   id: '/api/auth/login',
   path: '/api/auth/login',
@@ -130,15 +154,19 @@ const ApiTripsTripIdSubgroupsJoinRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/app/settings': typeof AppSettingsRoute
   '/profile/setup': typeof ProfileSetupRoute
   '/api/auth/check': typeof ApiAuthCheckRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
   '/api/profile/save': typeof ApiProfileSaveRoute
   '/api/trips/create': typeof ApiTripsCreateRoute
   '/api/trips/join': typeof ApiTripsJoinRoute
   '/app/trips/$tripId': typeof AppTripsTripIdRoute
   '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/profile': typeof ApiProfileIndexRoute
   '/api/trips': typeof ApiTripsIndexRoute
   '/app/trips': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
@@ -151,15 +179,19 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/app/settings': typeof AppSettingsRoute
   '/profile/setup': typeof ProfileSetupRoute
   '/api/auth/check': typeof ApiAuthCheckRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
   '/api/profile/save': typeof ApiProfileSaveRoute
   '/api/trips/create': typeof ApiTripsCreateRoute
   '/api/trips/join': typeof ApiTripsJoinRoute
   '/app/trips/$tripId': typeof AppTripsTripIdRoute
   '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/profile': typeof ApiProfileIndexRoute
   '/api/trips': typeof ApiTripsIndexRoute
   '/app/trips': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
@@ -173,15 +205,19 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/app/settings': typeof AppSettingsRoute
   '/profile/setup': typeof ProfileSetupRoute
   '/api/auth/check': typeof ApiAuthCheckRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/profile/check-onboarding': typeof ApiProfileCheckOnboardingRoute
   '/api/profile/save': typeof ApiProfileSaveRoute
   '/api/trips/create': typeof ApiTripsCreateRoute
   '/api/trips/join': typeof ApiTripsJoinRoute
   '/app/trips/$tripId': typeof AppTripsTripIdRoute
   '/app/trips/create': typeof AppTripsCreateRoute
+  '/api/profile/': typeof ApiProfileIndexRoute
   '/api/trips/': typeof ApiTripsIndexRoute
   '/app/trips/': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
@@ -196,15 +232,19 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/api/upload'
+    | '/app/settings'
     | '/profile/setup'
     | '/api/auth/check'
     | '/api/auth/login'
+    | '/api/auth/logout'
     | '/api/profile/check-onboarding'
     | '/api/profile/save'
     | '/api/trips/create'
     | '/api/trips/join'
     | '/app/trips/$tripId'
     | '/app/trips/create'
+    | '/api/profile'
     | '/api/trips'
     | '/app/trips'
     | '/api/trips/$tripId/balances'
@@ -217,15 +257,19 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/api/upload'
+    | '/app/settings'
     | '/profile/setup'
     | '/api/auth/check'
     | '/api/auth/login'
+    | '/api/auth/logout'
     | '/api/profile/check-onboarding'
     | '/api/profile/save'
     | '/api/trips/create'
     | '/api/trips/join'
     | '/app/trips/$tripId'
     | '/app/trips/create'
+    | '/api/profile'
     | '/api/trips'
     | '/app/trips'
     | '/api/trips/$tripId/balances'
@@ -238,15 +282,19 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/api/upload'
+    | '/app/settings'
     | '/profile/setup'
     | '/api/auth/check'
     | '/api/auth/login'
+    | '/api/auth/logout'
     | '/api/profile/check-onboarding'
     | '/api/profile/save'
     | '/api/trips/create'
     | '/api/trips/join'
     | '/app/trips/$tripId'
     | '/app/trips/create'
+    | '/api/profile/'
     | '/api/trips/'
     | '/app/trips/'
     | '/api/trips/$tripId/balances'
@@ -260,15 +308,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ApiUploadRoute: typeof ApiUploadRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   ProfileSetupRoute: typeof ProfileSetupRoute
   ApiAuthCheckRoute: typeof ApiAuthCheckRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
+  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiProfileCheckOnboardingRoute: typeof ApiProfileCheckOnboardingRoute
   ApiProfileSaveRoute: typeof ApiProfileSaveRoute
   ApiTripsCreateRoute: typeof ApiTripsCreateRoute
   ApiTripsJoinRoute: typeof ApiTripsJoinRoute
   AppTripsTripIdRoute: typeof AppTripsTripIdRoute
   AppTripsCreateRoute: typeof AppTripsCreateRoute
+  ApiProfileIndexRoute: typeof ApiProfileIndexRoute
   ApiTripsIndexRoute: typeof ApiTripsIndexRoute
   AppTripsIndexRoute: typeof AppTripsIndexRoute
   ApiTripsTripIdBalancesRoute: typeof ApiTripsTripIdBalancesRoute
@@ -301,6 +353,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/app/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/trips/': {
       id: '/app/trips/'
       path: '/app/trips'
@@ -313,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/api/trips'
       fullPath: '/api/trips'
       preLoaderRoute: typeof ApiTripsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profile/': {
+      id: '/api/profile/'
+      path: '/api/profile'
+      fullPath: '/api/profile'
+      preLoaderRoute: typeof ApiProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/trips/create': {
@@ -355,6 +428,13 @@ declare module '@tanstack/react-router' {
       path: '/api/profile/check-onboarding'
       fullPath: '/api/profile/check-onboarding'
       preLoaderRoute: typeof ApiProfileCheckOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/login': {
@@ -433,15 +513,19 @@ const ApiTripsTripIdSubgroupsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ApiUploadRoute: ApiUploadRoute,
+  AppSettingsRoute: AppSettingsRoute,
   ProfileSetupRoute: ProfileSetupRoute,
   ApiAuthCheckRoute: ApiAuthCheckRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
+  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiProfileCheckOnboardingRoute: ApiProfileCheckOnboardingRoute,
   ApiProfileSaveRoute: ApiProfileSaveRoute,
   ApiTripsCreateRoute: ApiTripsCreateRoute,
   ApiTripsJoinRoute: ApiTripsJoinRoute,
   AppTripsTripIdRoute: AppTripsTripIdRoute,
   AppTripsCreateRoute: AppTripsCreateRoute,
+  ApiProfileIndexRoute: ApiProfileIndexRoute,
   ApiTripsIndexRoute: ApiTripsIndexRoute,
   AppTripsIndexRoute: AppTripsIndexRoute,
   ApiTripsTripIdBalancesRoute: ApiTripsTripIdBalancesRoute,

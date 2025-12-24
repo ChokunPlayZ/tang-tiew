@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
 import { db } from '../../../db'
 import { users, sessions } from '../../../db/schema'
 import { eq } from 'drizzle-orm'
@@ -46,36 +45,22 @@ async function getCurrentUserFromRequest(request: Request) {
     return user
 }
 
-export const Route = createFileRoute('/api/profile/save')({
+export const Route = createFileRoute('/api/profile/')({
     server: {
         handlers: {
-            POST: async ({ request }) => {
-                try {
-                    const currentUser = await getCurrentUserFromRequest(request)
-                    if (!currentUser) {
-                        return Response.json({ error: 'Unauthorized' }, { status: 401 })
-                    }
-
-                    const body = await request.json()
-                    const parsed = z.object({
-                        displayName: z.string().max(50).nullable(),
-                        promptPayId: z.string().max(20).nullable(),
-                        promptPayType: z.enum(['PHONE', 'NATIONAL_ID', 'EWALLET']).nullable(),
-                    }).parse(body)
-
-                    await db.update(users)
-                        .set({
-                            displayName: parsed.displayName,
-                            promptPayId: parsed.promptPayId,
-                            promptPayType: parsed.promptPayType,
-                        })
-                        .where(eq(users.id, currentUser.id))
-
-                    return Response.json({ success: true })
-                } catch (error) {
-                    console.error('Profile save error:', error)
-                    return Response.json({ error: 'Failed to save profile' }, { status: 400 })
+            GET: async ({ request }) => {
+                const user = await getCurrentUserFromRequest(request)
+                if (!user) {
+                    return Response.json({ error: 'Unauthorized' }, { status: 401 })
                 }
+
+                return Response.json({
+                    id: user.id,
+                    displayName: user.displayName,
+                    phoneNumber: user.phoneNumber,
+                    promptPayId: user.promptPayId,
+                    promptPayType: user.promptPayType,
+                })
             }
         }
     }
