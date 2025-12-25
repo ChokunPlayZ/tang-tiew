@@ -27,7 +27,7 @@ export const Route = createFileRoute('/api/upload')({
                     }
 
                     // Create uploads directory if it doesn't exist
-                    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+                    const uploadsDir = process.env.STORAGE_DIR || path.join(process.cwd(), 'public', 'uploads')
                     await mkdir(uploadsDir, { recursive: true })
 
                     // Generate unique filename

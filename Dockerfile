@@ -26,8 +26,17 @@ WORKDIR /app
 # Nitro/TanStack Start builds to .output by default
 COPY --from=prerelease /app/.output .output
 
+# Copy migrations and production config
+COPY --from=prerelease /app/drizzle ./drizzle
+COPY --from=prerelease /app/drizzle.config.prod.ts ./
+COPY --from=prerelease /app/start.sh ./
+
 # Expose the port the app runs on
 EXPOSE 3000/tcp
 
-# Run the server
-CMD [ "bun", "run", ".output/server/index.mjs" ]
+# Set storage directory for persistent uploads
+# IMPORTANT: Mount a volume to this path to persist uploads
+ENV STORAGE_DIR="/app/.output/public/uploads"
+
+# Run the server via start script (handles migrations)
+CMD [ "/bin/sh", "start.sh" ]
