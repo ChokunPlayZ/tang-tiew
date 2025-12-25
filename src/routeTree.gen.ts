@@ -29,6 +29,7 @@ import { Route as ApiAuthCheckRouteImport } from './routes/api/auth/check'
 import { Route as ApiTripsTripIdIndexRouteImport } from './routes/api/trips/$tripId/index'
 import { Route as ApiTripsTripIdSubgroupsRouteImport } from './routes/api/trips/$tripId/subgroups'
 import { Route as ApiTripsTripIdPaymentsRouteImport } from './routes/api/trips/$tripId/payments'
+import { Route as ApiTripsTripIdMembersRouteImport } from './routes/api/trips/$tripId/members'
 import { Route as ApiTripsTripIdExpensesRouteImport } from './routes/api/trips/$tripId/expenses'
 import { Route as ApiTripsTripIdBalancesRouteImport } from './routes/api/trips/$tripId/balances'
 import { Route as ApiTripsTripIdSubgroupsJoinRouteImport } from './routes/api/trips/$tripId/subgroups/join'
@@ -134,6 +135,11 @@ const ApiTripsTripIdPaymentsRoute = ApiTripsTripIdPaymentsRouteImport.update({
   path: '/api/trips/$tripId/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTripsTripIdMembersRoute = ApiTripsTripIdMembersRouteImport.update({
+  id: '/api/trips/$tripId/members',
+  path: '/api/trips/$tripId/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTripsTripIdExpensesRoute = ApiTripsTripIdExpensesRouteImport.update({
   id: '/api/trips/$tripId/expenses',
   path: '/api/trips/$tripId/expenses',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/app/trips': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
   '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/members': typeof ApiTripsTripIdMembersRoute
   '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
   '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
   '/api/trips/$tripId': typeof ApiTripsTripIdIndexRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/app/trips': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
   '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/members': typeof ApiTripsTripIdMembersRoute
   '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
   '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
   '/api/trips/$tripId': typeof ApiTripsTripIdIndexRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/app/trips/': typeof AppTripsIndexRoute
   '/api/trips/$tripId/balances': typeof ApiTripsTripIdBalancesRoute
   '/api/trips/$tripId/expenses': typeof ApiTripsTripIdExpensesRoute
+  '/api/trips/$tripId/members': typeof ApiTripsTripIdMembersRoute
   '/api/trips/$tripId/payments': typeof ApiTripsTripIdPaymentsRoute
   '/api/trips/$tripId/subgroups': typeof ApiTripsTripIdSubgroupsRouteWithChildren
   '/api/trips/$tripId/': typeof ApiTripsTripIdIndexRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/trips'
     | '/api/trips/$tripId/balances'
     | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/members'
     | '/api/trips/$tripId/payments'
     | '/api/trips/$tripId/subgroups'
     | '/api/trips/$tripId'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/app/trips'
     | '/api/trips/$tripId/balances'
     | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/members'
     | '/api/trips/$tripId/payments'
     | '/api/trips/$tripId/subgroups'
     | '/api/trips/$tripId'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/app/trips/'
     | '/api/trips/$tripId/balances'
     | '/api/trips/$tripId/expenses'
+    | '/api/trips/$tripId/members'
     | '/api/trips/$tripId/payments'
     | '/api/trips/$tripId/subgroups'
     | '/api/trips/$tripId/'
@@ -325,6 +337,7 @@ export interface RootRouteChildren {
   AppTripsIndexRoute: typeof AppTripsIndexRoute
   ApiTripsTripIdBalancesRoute: typeof ApiTripsTripIdBalancesRoute
   ApiTripsTripIdExpensesRoute: typeof ApiTripsTripIdExpensesRoute
+  ApiTripsTripIdMembersRoute: typeof ApiTripsTripIdMembersRoute
   ApiTripsTripIdPaymentsRoute: typeof ApiTripsTripIdPaymentsRoute
   ApiTripsTripIdSubgroupsRoute: typeof ApiTripsTripIdSubgroupsRouteWithChildren
   ApiTripsTripIdIndexRoute: typeof ApiTripsTripIdIndexRoute
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTripsTripIdPaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/trips/$tripId/members': {
+      id: '/api/trips/$tripId/members'
+      path: '/api/trips/$tripId/members'
+      fullPath: '/api/trips/$tripId/members'
+      preLoaderRoute: typeof ApiTripsTripIdMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/trips/$tripId/expenses': {
       id: '/api/trips/$tripId/expenses'
       path: '/api/trips/$tripId/expenses'
@@ -530,6 +550,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppTripsIndexRoute: AppTripsIndexRoute,
   ApiTripsTripIdBalancesRoute: ApiTripsTripIdBalancesRoute,
   ApiTripsTripIdExpensesRoute: ApiTripsTripIdExpensesRoute,
+  ApiTripsTripIdMembersRoute: ApiTripsTripIdMembersRoute,
   ApiTripsTripIdPaymentsRoute: ApiTripsTripIdPaymentsRoute,
   ApiTripsTripIdSubgroupsRoute: ApiTripsTripIdSubgroupsRouteWithChildren,
   ApiTripsTripIdIndexRoute: ApiTripsTripIdIndexRoute,

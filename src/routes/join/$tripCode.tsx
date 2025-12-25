@@ -16,23 +16,40 @@ function JoinTripPage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        async function checkAuth() {
+        async function checkStatus() {
             try {
-                const response = await fetch('/api/auth/check', {
-                    credentials: 'include',
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setIsAuthenticated(data.authenticated)
-                } else {
+                // Check Auth
+                const authResponse = await fetch('/api/auth/check', { credentials: 'include' })
+                if (!authResponse.ok) {
                     setIsAuthenticated(false)
+                    return
+                }
+                const authData = await authResponse.json()
+                setIsAuthenticated(authData.authenticated)
+
+                if (authData.authenticated) {
+                    // Check Membership
+                    const membershipResponse = await fetch(`/api/trips/join?code=${tripCode}`, { credentials: 'include' })
+                    if (membershipResponse.ok) {
+                        const membershipData = await membershipResponse.json()
+                        if (membershipData.isMember) {
+                            if (membershipData.requiresOnboarding) {
+                                router.navigate({
+                                    to: '/profile/setup',
+                                    search: { redirect: `/app/trips/${membershipData.tripId}` }
+                                })
+                            } else {
+                                router.navigate({ to: `/app/trips/${membershipData.tripId}` as any })
+                            }
+                        }
+                    }
                 }
             } catch {
                 setIsAuthenticated(false)
             }
         }
-        checkAuth()
-    }, [])
+        checkStatus()
+    }, [tripCode, router])
 
     const handleJoin = async () => {
         if (!isAuthenticated) {
@@ -54,7 +71,14 @@ function JoinTripPage() {
             const data = await response.json()
 
             if (response.ok) {
-                router.navigate({ to: `/app/trips/${data.tripId}` as any })
+                if (data.requiresOnboarding) {
+                    router.navigate({
+                        to: '/profile/setup',
+                        search: { redirect: `/app/trips/${data.tripId}` }
+                    })
+                } else {
+                    router.navigate({ to: `/app/trips/${data.tripId}` as any })
+                }
             } else {
                 setError(data.error || 'ไม่สามารถเข้าร่วมทริปได้')
             }

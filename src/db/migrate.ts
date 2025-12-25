@@ -1,15 +1,23 @@
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
-import { db } from './index'
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
+
+const execAsync = promisify(exec)
 
 export async function migrateToLatest() {
-    console.log('🚧 Starting database migration...')
+    console.log('🚧 Starting database sync (drizzle-kit push)...')
     try {
-        // checks if the "drizzle" folder exists and runs migrations
-        // defaulting to "drizzle" folder in the project root
-        await migrate(db, { migrationsFolder: 'drizzle' })
-        console.log('✅ Database migration completed successfully.')
+        // Run drizzle-kit push to sync schema with database
+        // This handles existing tables gracefully and applies only unmatched changes
+        const { stdout, stderr } = await execAsync('bunx drizzle-kit push')
+
+        console.log(stdout)
+        if (stderr) console.error(stderr)
+
+        console.log('✅ Database sync completed successfully.')
     } catch (error) {
-        console.error('❌ Database migration failed:', error)
+        console.error('❌ Database sync failed:', error)
+        // We throw so the server knows startup failed, or we could swallow if we want to be resilient
+        // But for schema sync, failure usually means mismatched code/db, so better to warn loud
         throw error
     }
 }

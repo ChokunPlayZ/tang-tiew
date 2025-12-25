@@ -6,7 +6,7 @@ import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog'
-import { ArrowLeft, Plus, Users, Receipt, Wallet, ChevronRight, Check, Upload, X, History, ImageIcon, ArrowRight } from 'lucide-react'
+import { ArrowLeft, Plus, Users, Receipt, Wallet, ChevronRight, Check, Upload, X, History, ImageIcon, ArrowRight, Trash2 } from 'lucide-react'
 import generatePayload from 'promptpay-qr'
 import QRCode from 'qrcode'
 import { ShareTripDialog } from '../../../components/trips/ShareTripDialog'
@@ -28,6 +28,7 @@ type Trip = {
     id: number
     name: string
     code: string
+    createdBy: number
     createdAt: string
 }
 
@@ -199,6 +200,7 @@ function TripDetailPage() {
                             subGroups={subGroups}
                             currentUserId={currentUserId}
                             tripId={tripId}
+                            createdBy={trip.createdBy}
                             onUpdate={loadTripData}
                         />
                     </TabsContent>
@@ -244,17 +246,49 @@ function MembersTab({
     subGroups,
     currentUserId,
     tripId,
+    createdBy,
     onUpdate
 }: {
     members: Member[]
     subGroups: SubGroup[]
     currentUserId: number | null
     tripId: string
+    createdBy: number
     onUpdate: () => void
 }) {
     const [newGroupName, setNewGroupName] = useState('')
     const [groupError, setGroupError] = useState('')
     const [isAddingGroup, setIsAddingGroup] = useState(false)
+
+    // Import Trash2 if not capable of modifying import statement directly, I'll assume lucide-react has it or I'll use X for now and update import later.
+    // Actually, I can use X or Minus, but let's try Trash2. If it fails I'll fix it. 
+    // Wait, I can't easily change the top import. I'll use `X` or `LogOut` or just text for now.
+    // Ah, I can instruct to change the import at the top too.
+
+    // For now, let's assume I'll use a `Button` with "Kick" text or a generic icon available. `Users` -> `UserMinus`?
+    // Let's use `Trash2` but I need to ensure it's imported.
+    // I will add another replace_file_content call to add Trash2 to imports.
+
+    const handleKick = async (userId: number, userName: string) => {
+        if (!confirm(`ต้องการลบ ${userName} ออกจากทริปใช่หรือไม่?`)) return
+
+        try {
+            const response = await fetch(`/api/trips/${tripId}/members`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                alert(data.error || 'Failed to remove member')
+                return
+            }
+            onUpdate()
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด')
+        }
+    }
 
     const handleAddGroup = async () => {
         setGroupError('')
@@ -301,6 +335,8 @@ function MembersTab({
         }
     }
 
+    const isOwner = currentUserId === createdBy
+
     return (
         <>
             {/* Members List */}
@@ -310,13 +346,29 @@ function MembersTab({
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {members.map(member => (
-                        <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                            <div className="font-medium">
+                        <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-0 group">
+                            <div className="font-medium flex items-center gap-2">
                                 {member.displayName || 'ไม่ระบุชื่อ'}
+                                {member.userId === createdBy && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Owner</span>
+                                )}
                             </div>
-                            {member.userId === currentUserId && (
-                                <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded">คุณ</span>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {member.userId === currentUserId && (
+                                    <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded">คุณ</span>
+                                )}
+                                {isOwner && member.userId !== currentUserId && (
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => handleKick(member.userId, member.displayName || 'สมาชิก')}
+                                        title="ลบออกจากทริป"
+                                    >
+                                        <Trash2 size={16} />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </CardContent>

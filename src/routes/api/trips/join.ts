@@ -22,6 +22,65 @@ function parseCookies(cookieHeader: string | null): Record<string, string> {
 export const Route = createFileRoute('/api/trips/join')({
     server: {
         handlers: {
+            GET: async ({ request }) => {
+                try {
+                    const url = new URL(request.url)
+                    const code = url.searchParams.get('code')
+
+                    if (!code) {
+                        return Response.json({ error: 'Code required' }, { status: 400 })
+                    }
+
+                    const cookies = parseCookies(request.headers.get('cookie'))
+                    const sessionId = cookies[SESSION_COOKIE]
+
+                    if (!sessionId) {
+                        return Response.json({ error: 'Unauthorized' }, { status: 401 })
+                    }
+
+                    const result = await db.select({
+                        user: users,
+                        session: sessions
+                    })
+                        .from(sessions)
+                        .innerJoin(users, eq(sessions.userId, users.id))
+                        .where(eq(sessions.id, sessionId))
+                        .limit(1)
+
+                    if (result.length === 0) {
+                        return Response.json({ error: 'Unauthorized' }, { status: 401 })
+                    }
+
+                    const { user } = result[0]
+
+                    const trip = await db.query.trips.findFirst({
+                        where: eq(trips.code, code.toUpperCase())
+                    })
+
+                    if (!trip) {
+                        return Response.json({ error: 'Trip not found' }, { status: 404 })
+                    }
+
+                    const existingMember = await db.query.tripMembers.findFirst({
+                        where: and(
+                            eq(tripMembers.tripId, trip.id),
+                            eq(tripMembers.userId, user.id)
+                        )
+                    })
+
+                    const requiresOnboarding = !user.displayName || !user.promptPayId
+
+                    return Response.json({
+                        isMember: !!existingMember,
+                        tripId: trip.id,
+                        requiresOnboarding
+                    })
+
+                } catch (error) {
+                    console.error('Check membership error:', error)
+                    return Response.json({ error: 'Failed to check membership' }, { status: 500 })
+                }
+            },
             POST: async ({ request }) => {
                 try {
                     const body = await request.json()
@@ -94,7 +153,8 @@ export const Route = createFileRoute('/api/trips/join')({
                             })
                         }
 
-                        return Response.json({ success: true, tripId: trip.id })
+                        const requiresOnboarding = !user.displayName || !user.promptPayId
+                        return Response.json({ success: true, tripId: trip.id, requiresOnboarding })
                     }
 
                     const availableSubGroups = await db.select().from(subGroups).where(eq(subGroups.tripId, trip.id))
@@ -108,7 +168,8 @@ export const Route = createFileRoute('/api/trips/join')({
                         })
                     }
 
-                    return Response.json({ success: true, tripId: trip.id })
+                    const requiresOnboarding = !user.displayName || !user.promptPayId
+                    return Response.json({ success: true, tripId: trip.id, requiresOnboarding })
                 } catch (error) {
                     console.error('Join trip error:', error)
                     return Response.json({ error: 'Failed to join trip' }, { status: 400 })

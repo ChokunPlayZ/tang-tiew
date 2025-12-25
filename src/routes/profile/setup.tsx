@@ -12,7 +12,12 @@ import {
 import { useState, useEffect } from 'react'
 import { extractPromptPayId, readQrFromFile } from '../../lib/promptpay'
 
+import { z } from 'zod'
+
 export const Route = createFileRoute('/profile/setup')({
+    validateSearch: z.object({
+        redirect: z.string().optional(),
+    }),
     component: ProfileSetupPage,
 })
 
@@ -116,8 +121,15 @@ function ProfileSetupPage() {
                 throw new Error('Failed to save profile')
             }
 
+            const { redirect } = Route.useSearch()
+
             router.invalidate()
-            await router.navigate({ to: '/app/trips' })
+
+            if (redirect) {
+                await router.navigate({ to: redirect as any })
+            } else {
+                await router.navigate({ to: '/app/trips' })
+            }
         } catch (err) {
             console.error(err)
             alert('Failed to save profile')
@@ -163,8 +175,8 @@ function ProfileSetupPage() {
                         <div className="space-y-2">
                             <Label className="text-sm font-medium">QR รับเงิน (PromptPay QR)</Label>
                             <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-all relative overflow-hidden group ${qrStatus === 'SUCCESS'
-                                    ? 'border-green-500 bg-green-50/50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-700 hover:border-cyan-500 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20'
+                                ? 'border-green-500 bg-green-50/50 dark:bg-green-900/20'
+                                : 'border-gray-300 dark:border-gray-700 hover:border-cyan-500 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20'
                                 }`}>
                                 <Input
                                     type="file"
