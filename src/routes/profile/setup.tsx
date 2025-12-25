@@ -23,6 +23,7 @@ export const Route = createFileRoute('/profile/setup')({
 
 function ProfileSetupPage() {
     const router = useRouter()
+    const { redirect } = Route.useSearch()
     const [qrStatus, setQrStatus] = useState<'IDLE' | 'READING' | 'SUCCESS' | 'ERROR'>('IDLE')
     const [scannedId, setScannedId] = useState<string>('')
     const [scannedType, setScannedType] = useState<string>('')
@@ -121,7 +122,7 @@ function ProfileSetupPage() {
                 throw new Error('Failed to save profile')
             }
 
-            const { redirect } = Route.useSearch()
+
 
             router.invalidate()
 
