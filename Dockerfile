@@ -25,6 +25,7 @@ WORKDIR /app
 # Copy the built output from the prerelease stage
 # Copy the built output from the prerelease stage
 # Nitro/TanStack Start builds to .output by default
+COPY --from=prerelease /app/node_modules node_modules
 COPY --from=prerelease /app/.output .output
 
 # Copy migrations (needed for src/db/migrate.ts)
