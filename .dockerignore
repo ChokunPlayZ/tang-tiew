@@ -1,0 +1,9 @@
+node_modules
+.output
+.git
+.env
+.env.local
+.DS_Store
+dist
+coverage
+.intro
