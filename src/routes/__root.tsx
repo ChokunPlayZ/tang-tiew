@@ -16,7 +16,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TangTiew - Trip Expense Splitter',
+        title: 'TangMa - Trip Expense Splitter',
       },
     ],
     links: [

@@ -61,7 +61,7 @@ export function AppNavbar() {
                     {/* Logo / Brand */}
                     <Link to="/app/trips" className="flex items-center gap-2 font-bold text-xl">
                         <Map size={24} />
-                        <span>TangTiew</span>
+                        <span>TangMa</span>
                     </Link>
 
                     {/* Right Side: Theme Toggle + User Menu */}

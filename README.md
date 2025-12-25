@@ -1,6 +1,6 @@
-# TangTiew (ตังเที่ยว) 🚗💨
+# TangMa (ตังเที่ยว) 🚗💨
 
-TangTiew is a modern, mobile-first web application designed to simplify trip planning and expense sharing for groups. Built with the latest web technologies, it offers a seamless experience for managing shared costs, splitting bills, and settling debts among friends.
+TangMa is a modern, mobile-first web application designed to simplify trip planning and expense sharing for groups. Built with the latest web technologies, it offers a seamless experience for managing shared costs, splitting bills, and settling debts among friends.
 
 ## ✨ Features
 

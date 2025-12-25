@@ -60,7 +60,7 @@ function LoginPage() {
                     </div>
                     <div>
                         <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-600 to-teal-600 dark:from-cyan-400 dark:to-teal-400">
-                            TangTiew
+                            TangMa
                         </CardTitle>
                         <CardDescription className="text-base mt-2">
                             หารค่าใช้จ่ายทริปเที่ยว แบบง่ายๆ

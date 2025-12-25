@@ -108,7 +108,7 @@ export const Route = createFileRoute('/api/trips/$tripId/subgroups/join')({
                     if (error instanceof z.ZodError) {
                         return Response.json({
                             error: 'Validation failed',
-                            details: error.errors
+                            details: error.issues
                         }, { status: 400 })
                     }
                     console.error('SubGroup join error:', error)
